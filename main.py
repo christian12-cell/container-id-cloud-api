@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 import base64
 import os
 from datetime import datetime
@@ -26,6 +27,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # === Log function ===
 def log_event(message: str):
+    """Logs events with a timestamp to both a file and the console."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(LOG_FILE, "a") as f:
         f.write(f"[{timestamp}] {message}\n")
@@ -50,18 +52,38 @@ async def receive_image(request: Request):
         log_event(f"Upload error: {e}")
         return {"status": "error", "message": str(e)}
 
-# === Simple GET endpoint to check status ===
+# === GET endpoint to check API status ===
 @app.get("/check")
 def status():
+    """Returns a basic status message and whether an image is currently available."""
     return {
         "status": "running",
         "image_available": os.path.exists(LATEST_FILE)
     }
 
+# === GET endpoint to fetch the latest cropped image (in base64) ===
+@app.get("/get-latest-image")
+def get_latest_image():
+    """
+    Returns the latest cropped image as base64 if it exists.
+    This is useful for verifying what the server currently holds.
+    """
+    if not os.path.exists(LATEST_FILE):
+        return JSONResponse(status_code=404, content={"status": "error", "message": "No image available"})
+    
+    with open(LATEST_FILE, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode("utf-8")
+    
+    return {
+        "status": "ok",
+        "image_base64": encoded
+    }
+
 # === Check if Box-E wants an image ===
 def check_demand_from_boxe() -> bool:
     """
-    Asks Box-E if it currently needs an image
+    Polls Box-E to determine if an image is requested.
+    Returns True if Box-E requires an image, False otherwise.
     """
     try:
         response = requests.get(BOXE_DEMAND_CHECK_URL)
@@ -74,6 +96,7 @@ def check_demand_from_boxe() -> bool:
 
 # === Loop that checks demand and sends image if needed ===
 def polling_loop():
+    """Continuously checks if Box-E is requesting an image and sends it if available."""
     log_event("Started polling loop to check Box-E.")
     while True:
         if check_demand_from_boxe():
@@ -100,5 +123,6 @@ def polling_loop():
 # === Start polling loop when API launches ===
 @app.on_event("startup")
 def start_polling():
+    """Starts the background polling thread when the API starts."""
     thread = threading.Thread(target=polling_loop, daemon=True)
     thread.start()
