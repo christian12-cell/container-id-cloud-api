@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, PlainTextResponse
 import base64
 import os
 from datetime import datetime
@@ -36,9 +36,7 @@ def log_event(message: str):
 # === Endpoint to receive image from Jetson ===
 @app.post("/upload")
 async def receive_image(request: Request):
-    """
-    Receives a base64-encoded image from the Jetson and saves it.
-    """
+    """Receives a base64-encoded image from the Jetson and saves it."""
     try:
         data = await request.json()
         image_b64 = data["image"]
@@ -64,9 +62,7 @@ def status():
 # === Endpoint to fetch latest image in base64 ===
 @app.get("/get-latest-image")
 def get_latest_image():
-    """
-    Returns the latest image encoded in base64 format.
-    """
+    """Returns the latest image encoded in base64 format."""
     if not os.path.exists(LATEST_FILE):
         return JSONResponse(status_code=404, content={"status": "error", "message": "No image available"})
     
@@ -79,15 +75,23 @@ def get_latest_image():
         "image_base64": encoded
     }
 
-# === NEW: Endpoint to view the latest image directly ===
+# === Endpoint to view image directly ===
 @app.get("/view-image")
 def view_image():
-    """
-    Returns the latest image as a raw PNG file for direct viewing.
-    """
+    """Returns the latest image as a raw PNG file for direct viewing."""
     if os.path.exists(LATEST_FILE):
         return FileResponse(LATEST_FILE, media_type="image/png")
     return JSONResponse(status_code=404, content={"status": "error", "message": "No image available"})
+
+# === NEW: View logs content ===
+@app.get("/view-logs")
+def view_logs():
+    """Returns the contents of logs.txt (for monitoring/debugging)."""
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            content = f.read()
+        return PlainTextResponse(content)
+    return PlainTextResponse("No logs available.")
 
 # === Check if Box-E wants an image ===
 def check_demand_from_boxe() -> bool:
