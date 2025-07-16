@@ -79,7 +79,7 @@ def get_latest_image():
         return JSONResponse(status_code=404, content={"status": "error", "message": "No image available"})
 
     with open(LATEST_FILE, "rb") as f:
-        encoded = base64.b64encode(f.read()).decode("utf-8")
+        encoded = base64.b64encode(f.read())
 
     return {
         "status": "ok",
@@ -122,7 +122,7 @@ async def receive_demand(request: Request):
         boxe_wants_image = data.get("demand", False)
         log_event(f"Box-E demand received: {'YES' if boxe_wants_image else 'NO'}")
         imgResult = get_latest_image()
-        return {"status": "ok", "received": boxe_wants_image, "imgResult": imgResult}
+        return {"imgResult": imgResult}
     except Exception as e:
         log_event(f"Error in /receive-demand: {e}")
         return {"status": "error", "message": str(e)}
