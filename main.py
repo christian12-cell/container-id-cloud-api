@@ -20,7 +20,7 @@ LATEST_FILE = os.path.join(UPLOAD_DIR, "latest.png")  # Full path to the most re
 BOXE_UPLOAD_URL = "https://box-e.be/API/UploadImage.php"
 
 # Polling interval (how often to check if Box-E wants an image)
-CHECK_INTERVAL = 5  # seconds
+CHECK_INTERVAL = 1  # seconds
 
 # === Global variable to track Box-E demand ===
 boxe_wants_image = False  # Set to True when Box-E requests an image
@@ -146,21 +146,21 @@ def polling_loop():
     while True:
         if check_demand_from_boxe():
             log_event("Box-E has requested an image.")
-            if os.path.exists(LATEST_FILE):
-                with open(LATEST_FILE, "rb") as f:
-                    image_data = base64.b64encode(f.read()).decode("utf-8")
-                payload = {
-                    "image": image_data,
-                    "filename": "latest.png"
-                }
-                try:
-                    response = requests.post(BOXE_UPLOAD_URL, json=payload)
-                    response.raise_for_status()
-                    log_event("Image successfully sent to Box-E.")
-                except Exception as e:
-                    log_event(f"Error sending image to Box-E: {e}")
-            else:
-                log_event("No image found to send.")
+            # if os.path.exists(LATEST_FILE):
+            #     with open(LATEST_FILE, "rb") as f:
+            #         image_data = base64.b64encode(f.read()).decode("utf-8")
+            #     payload = {
+            #         "image": image_data,
+            #         "filename": "latest.png"
+            #     }
+            #     try:
+            #         response = requests.post(BOXE_UPLOAD_URL, json=payload)
+            #         response.raise_for_status()
+            #         log_event("Image successfully sent to Box-E.")
+            #     except Exception as e:
+            #         log_event(f"Error sending image to Box-E: {e}")
+            # else:
+            #     log_event("No image found to send.")
         else:
             log_event("Box-E is not requesting an image.")
         time.sleep(CHECK_INTERVAL)
