@@ -121,7 +121,8 @@ async def receive_demand(request: Request):
         data = await request.json()
         boxe_wants_image = data.get("demand", False)
         log_event(f"Box-E demand received: {'YES' if boxe_wants_image else 'NO'}")
-        return {"status": "ok", "received": boxe_wants_image}
+        imgResult = get_latest_image()
+        return {"status": "ok", "received": boxe_wants_image, "imgResult": imgResult}
     except Exception as e:
         log_event(f"Error in /receive-demand: {e}")
         return {"status": "error", "message": str(e)}
