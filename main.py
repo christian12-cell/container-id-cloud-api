@@ -20,7 +20,7 @@ LATEST_FILE = os.path.join(UPLOAD_DIR, "latest.png")  # Full path to the most re
 BOXE_UPLOAD_URL = "https://box-e.be/API/UploadImage.php"
 
 # Polling interval (how often to check if Box-E wants an image)
-CHECK_INTERVAL = 1  # seconds
+CHECK_INTERVAL = 3  # seconds
 
 # === Global variable to track Box-E demand ===
 boxe_wants_image = False  # Set to True when Box-E requests an image
