@@ -93,9 +93,12 @@ def view_logs():
     return PlainTextResponse("No logs available.")
 
 # === Endpoint: receive pong to avoid the API goes sleep ===
-@app.get("/ping")
-def ping():
+@app.api_route("/ping", methods=["GET", "HEAD"])
+async def ping(request: Request):
+    if request.method == "HEAD":
+        return JSONResponse(content=None, status_code=200)
     return {"message": "pong"}
+
 
 # === Endpoint: Box-E requests image ===
 @app.post("/receive-demand")
